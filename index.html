@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rotina da Casa</title>
 
+<!-- Configurações para Web App / PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#23264A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rotina Casa">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <style>
     :root {
         /* Tema Claro (Light Mode) */
@@ -78,6 +86,7 @@
         color: var(--text-color);
         line-height: 1.5;
         transition: background 0.3s ease, color 0.3s ease;
+        -webkit-tap-highlight-color: transparent;
     }
 
     header {
@@ -105,7 +114,6 @@
         font-size: 14px;
     }
 
-    /* Botão de Tema */
     .theme-toggle-btn {
         background: rgba(255, 255, 255, 0.15);
         color: white;
@@ -140,7 +148,6 @@
         font-size: 15px;
     }
 
-    /* Centralização dos Botões de Usuário e Menu */
     .users, .menu {
         display: flex;
         justify-content: center;
@@ -205,7 +212,6 @@
         font-weight: 700;
     }
 
-    /* Badges de Estatísticas e Tarefas Pendentes */
     .today-stats {
         display: flex;
         gap: 12px;
@@ -256,7 +262,6 @@
         margin-top: 2px;
     }
 
-    /* Estilo e Animações das Tarefas */
     .task {
         display: flex;
         align-items: center;
@@ -292,7 +297,6 @@
         opacity: 0.55;
     }
 
-    /* Animação CSS ao Concluir Tarefa */
     .task-completed-anim {
         animation: taskPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -334,7 +338,6 @@
         background: transparent;
     }
 
-    /* Legenda do Calendário */
     .calendar-legend {
         display: flex;
         justify-content: center;
@@ -358,7 +361,6 @@
         display: inline-block;
     }
 
-    /* Calendário e Tons Pastel */
     .calendar {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
@@ -397,7 +399,6 @@
         opacity: 0.9;
     }
 
-    /* Status com Cores Pastel */
     .status-done {
         background-color: var(--cal-done-bg) !important;
         color: var(--cal-done-text) !important;
@@ -472,18 +473,11 @@
         <span id="starterInfo"></span>
     </div>
 
-    <!-- Usuários Centralizados -->
     <div class="users">
-        <button class="user-btn active" onclick="selectUser('Igor')" id="btnIgor">
-            Igor
-        </button>
-
-        <button class="user-btn" onclick="selectUser('Wagner')" id="btnWagner">
-            Wagner
-        </button>
+        <button class="user-btn active" onclick="selectUser('Igor')" id="btnIgor">Igor</button>
+        <button class="user-btn" onclick="selectUser('Wagner')" id="btnWagner">Wagner</button>
     </div>
 
-    <!-- Menu Centralizado -->
     <div class="menu">
         <button onclick="showScreen('today')">📋 Hoje</button>
         <button onclick="showScreen('history')">📅 Histórico</button>
@@ -492,11 +486,9 @@
 
     <!-- HOJE -->
     <section id="todayScreen">
-
         <div class="card">
             <h2>📋 Tarefas de hoje — <span id="todayUser"></span></h2>
 
-            <!-- Contagem de Estatísticas / Pendentes -->
             <div class="today-stats">
                 <div class="stat-badge">
                     <span class="stat-label">⭐ Pontos Hoje</span>
@@ -523,12 +515,10 @@
             <h2>⏰ Tarefas atrasadas</h2>
             <div id="overdueTasks"></div>
         </div>
-
     </section>
 
     <!-- HISTÓRICO -->
     <section id="historyScreen" class="hidden">
-
         <div class="card">
             <h2>📅 Histórico</h2>
 
@@ -538,7 +528,6 @@
                 <button onclick="setHistoryFilter('Wagner')">Wagner</button>
             </div>
 
-            <!-- Legenda das Cores Pastel -->
             <div class="calendar-legend">
                 <span class="legend-item"><span class="legend-dot status-done"></span> Concluído</span>
                 <span class="legend-item"><span class="legend-dot status-partial"></span> Parcial/Pendente</span>
@@ -551,27 +540,21 @@
 
         <div class="card">
             <h2>Detalhes do dia</h2>
-            <div id="historyDetails">
-                Clique em um dia do calendário.
-            </div>
+            <div id="historyDetails">Clique em um dia do calendário.</div>
         </div>
-
     </section>
 
     <!-- SEMANA -->
     <section id="weekScreen" class="hidden">
-
         <div class="card">
             <h2>📊 Resumo da semana</h2>
             <div id="weekSummary"></div>
         </div>
-
     </section>
 
 </div>
 
 <script>
-
 const USERS = ["Igor", "Wagner"];
 const START_DATE = new Date(2026, 8, 17);
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -582,9 +565,7 @@ let currentUser = "Igor";
 let historyFilter = "all";
 let selectedHistoryDate = null;
 
-/* =========================================
-   GERENCIAMENTO DE TEMA (CLARO/ESCURO)
-========================================= */
+/* TEMA ESCURO/CLARO */
 function toggleTheme() {
     document.body.classList.toggle("dark-mode");
     const isDark = document.body.classList.contains("dark-mode");
@@ -595,81 +576,37 @@ function toggleTheme() {
 function updateThemeBtn() {
     const isDark = document.body.classList.contains("dark-mode");
     const btn = document.getElementById("themeBtn");
-    if (btn) {
-        btn.textContent = isDark ? "☀️ Modo Claro" : "🌙 Modo Escuro";
-    }
+    if (btn) btn.textContent = isDark ? "☀️ Modo Claro" : "🌙 Modo Escuro";
 }
 
 function initTheme() {
     const savedTheme = localStorage.getItem(THEME_KEY);
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark-mode");
-    }
+    if (savedTheme === "dark") document.body.classList.add("dark-mode");
     updateThemeBtn();
 }
 
-/* =========================================
-   ATIVIDADES
-========================================= */
+/* TAREFAS */
 const chores = {
-    sweep: {
-        name: "Varrer a casa",
-        icon: "🧹",
-        points: 10
-    },
-    mop: {
-        name: "Passar pano",
-        icon: "🧽",
-        points: 15
-    },
-    trash: {
-        name: "Tirar o lixo",
-        icon: "🗑️",
-        points: 5
-    },
-    dishes: {
-        name: "Lavar a louça",
-        icon: "🍽️",
-        points: 10
-    },
-    bathroom: {
-        name: "Limpar o banheiro",
-        icon: "🚿",
-        points: 20
-    },
-    dust: {
-        name: "Tirar o pó",
-        icon: "🧹",
-        points: 10
-    }
+    sweep: { name: "Varrer a casa", icon: "🧹", points: 10 },
+    mop: { name: "Passar pano", icon: "🧽", points: 15 },
+    trash: { name: "Tirar o lixo", icon: "🗑️", points: 5 },
+    dishes: { name: "Lavar a louça", icon: "🍽️", points: 10 },
+    bathroom: { name: "Limpar o banheiro", icon: "🚿", points: 20 },
+    dust: { name: "Tirar o pó", icon: "🧹", points: 10 }
 };
 
-/* =========================================
-   DATAS
-========================================= */
 function normalizeDate(date) {
-    return new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-    );
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function dateKey(date) {
     const d = normalizeDate(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function dateFromKey(key) {
     const parts = key.split("-");
-    return new Date(
-        Number(parts[0]),
-        Number(parts[1]) - 1,
-        Number(parts[2])
-    );
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
 }
 
 function isBeforeStart(date) {
@@ -680,94 +617,50 @@ function isSameDay(a, b) {
     return dateKey(a) === dateKey(b);
 }
 
-/* =========================================
-   SORTEIO INICIAL
-========================================= */
 function getInitialStarter() {
     let starter = localStorage.getItem(STARTER_KEY);
-    if (starter) {
-        return starter;
-    }
+    if (starter) return starter;
     const starterUser = Math.random() < 0.5 ? "Igor" : "Wagner";
     localStorage.setItem(STARTER_KEY, starterUser);
     return starterUser;
 }
 
-/* =========================================
-   ROTAÇÃO DIÁRIA
-========================================= */
 function getDailyUser(date) {
-    if (isBeforeStart(date)) {
-        return null;
-    }
+    if (isBeforeStart(date)) return null;
     const starter = getInitialStarter();
-    const start = normalizeDate(START_DATE);
-    const current = normalizeDate(date);
-    const daysPassed = Math.floor((current - start) / DAY_MS);
-    if (daysPassed % 2 === 0) {
-        return starter;
-    }
-    return starter === "Igor" ? "Wagner" : "Igor";
+    const daysPassed = Math.floor((normalizeDate(date) - normalizeDate(START_DATE)) / DAY_MS);
+    return daysPassed % 2 === 0 ? starter : (starter === "Igor" ? "Wagner" : "Igor");
 }
 
-/* =========================================
-   DIAS DE PASSAR PANO
-========================================= */
 function isMopDay(date) {
     const day = date.getDay();
     return day === 1 || day === 3 || day === 5;
 }
 
-/* =========================================
-   SORTEIO DO PASSAR PANO
-========================================= */
 function getMopResponsible(date, create = true) {
-    if (!isMopDay(date) || isBeforeStart(date)) {
-        return null;
-    }
+    if (!isMopDay(date) || isBeforeStart(date)) return null;
     const key = "rotina_casa_mop_" + dateKey(date);
     let responsible = localStorage.getItem(key);
-    if (responsible) {
-        return responsible;
-    }
-    const today = normalizeDate(new Date());
-    if (!create && normalizeDate(date) > today) {
-        return null;
-    }
-    if (!create) {
-        return null;
-    }
+    if (responsible) return responsible;
+
+    if (!create && normalizeDate(date) > normalizeDate(new Date())) return null;
+    if (!create) return null;
+
     responsible = Math.random() < 0.5 ? "Igor" : "Wagner";
     localStorage.setItem(key, responsible);
     return responsible;
 }
 
-/* =========================================
-   QUAIS ATIVIDADES EXISTEM EM CADA DIA
-========================================= */
 function getScheduledChores(date) {
-    if (isBeforeStart(date)) {
-        return [];
-    }
+    if (isBeforeStart(date)) return [];
     const day = date.getDay();
-    if (day === 1 || day === 3 || day === 5) {
-        return ["sweep", "mop", "trash", "dishes"];
-    }
-    if (day === 2 || day === 4) {
-        return ["sweep", "trash", "dishes"];
-    }
-    if (day === 6) {
-        return ["trash", "dishes", "bathroom", "dust"];
-    }
-    if (day === 0) {
-        return ["trash", "dishes"];
-    }
+    if (day === 1 || day === 3 || day === 5) return ["sweep", "mop", "trash", "dishes"];
+    if (day === 2 || day === 4) return ["sweep", "trash", "dishes"];
+    if (day === 6) return ["trash", "dishes", "bathroom", "dust"];
+    if (day === 0) return ["trash", "dishes"];
     return [];
 }
 
-/* =========================================
-   RESPONSÁVEL POR CADA ATIVIDADE
-========================================= */
 function getResponsible(taskId, date, create = true) {
     if (taskId === "mop" || (taskId === "sweep" && isMopDay(date))) {
         return getMopResponsible(date, create);
@@ -775,9 +668,6 @@ function getResponsible(taskId, date, create = true) {
     return getDailyUser(date);
 }
 
-/* =========================================
-   COMPLETAR TAREFA
-========================================= */
 function completionKey(taskId, date, user) {
     return "rotina_casa_done_" + dateKey(date) + "_" + taskId + "_" + user;
 }
@@ -797,31 +687,22 @@ function setCompleted(taskId, date, user, completed) {
     }
 }
 
-/* =========================================
-   MARCAR TAREFA COM ANIMAÇÃO
-========================================= */
 function toggleTask(taskId, dateKeyValue, user, event) {
     const date = dateFromKey(dateKeyValue);
     const current = isCompleted(taskId, date, user);
     setCompleted(taskId, date, user, !current);
 
-    // Animação visual suave
     if (event && event.target) {
         const taskEl = event.target.closest('.task');
         if (taskEl) {
             taskEl.classList.add('task-completed-anim');
-            setTimeout(() => {
-                renderAll();
-            }, 250);
+            setTimeout(() => { renderAll(); }, 250);
             return;
         }
     }
     renderAll();
 }
 
-/* =========================================
-   TELA DE HOJE E TAREFAS PENDENTES
-========================================= */
 function renderToday() {
     const today = normalizeDate(new Date());
     const container = document.getElementById("todayTasks");
@@ -835,7 +716,6 @@ function renderToday() {
     }
 
     const tasks = getScheduledChores(today);
-
     let html = "";
     let completedCount = 0;
     let pendingToday = 0;
@@ -843,9 +723,7 @@ function renderToday() {
 
     tasks.forEach(taskId => {
         const responsible = getResponsible(taskId, today, true);
-        if (responsible !== currentUser) {
-            return;
-        }
+        if (responsible !== currentUser) return;
 
         const task = chores[taskId];
         const completed = isCompleted(taskId, today, currentUser);
@@ -859,21 +737,14 @@ function renderToday() {
 
         html += `
             <div class="task ${completed ? "done" : ""}">
-                <input
-                    type="checkbox"
-                    ${completed ? "checked" : ""}
-                    onchange="toggleTask('${taskId}', '${dateKey(today)}', '${currentUser}', event)"
-                >
+                <input type="checkbox" ${completed ? "checked" : ""} onchange="toggleTask('${taskId}', '${dateKey(today)}', '${currentUser}', event)">
                 <span>${task.icon} ${task.name}</span>
                 <span class="points">${task.points} pts</span>
             </div>
         `;
     });
 
-    if (html === "") {
-        html = "<p>Você não tem atividades para hoje. 😊</p>";
-    }
-
+    if (html === "") html = "<p>Você não tem atividades para hoje. 😊</p>";
     container.innerHTML = html;
 
     document.getElementById("todayPoints").textContent = points;
@@ -886,9 +757,6 @@ function renderToday() {
     renderOverdue();
 }
 
-/* =========================================
-   TAREFAS ATRASADAS
-========================================= */
 function renderOverdue() {
     const container = document.getElementById("overdueTasks");
     const today = normalizeDate(new Date());
@@ -897,23 +765,13 @@ function renderOverdue() {
 
     for (let i = 1; i <= 90; i++) {
         const date = new Date(today.getTime() - i * DAY_MS);
-
-        if (isBeforeStart(date)) {
-            break;
-        }
+        if (isBeforeStart(date)) break;
 
         const tasks = getScheduledChores(date);
-
         tasks.forEach(taskId => {
             const responsible = getResponsible(taskId, date, true);
-
-            if (responsible !== currentUser) {
-                return;
-            }
-
-            if (isCompleted(taskId, date, currentUser)) {
-                return;
-            }
+            if (responsible !== currentUser) return;
+            if (isCompleted(taskId, date, currentUser)) return;
 
             totalOverdueCount++;
             const task = chores[taskId];
@@ -922,10 +780,7 @@ function renderOverdue() {
                 <div class="overdue">
                     <strong>${date.toLocaleDateString("pt-BR")}</strong>
                     <div class="task">
-                        <input
-                            type="checkbox"
-                            onchange="toggleTask('${taskId}', '${dateKey(date)}', '${currentUser}', event)"
-                        >
+                        <input type="checkbox" onchange="toggleTask('${taskId}', '${dateKey(date)}', '${currentUser}', event)">
                         <span>${task.icon} ${task.name}</span>
                         <span class="points">${task.points} pts</span>
                     </div>
@@ -935,21 +790,13 @@ function renderOverdue() {
     }
 
     document.getElementById("totalOverdue").textContent = totalOverdueCount;
-
-    if (html === "") {
-        html = "<p>🎉 Nenhuma tarefa atrasada!</p>";
-    }
-
+    if (html === "") html = "<p>🎉 Nenhuma tarefa atrasada!</p>";
     container.innerHTML = html;
 }
 
-/* =========================================
-   TELA DE HISTÓRICO E CALENDÁRIO COM CORES PASTEL
-========================================= */
 function renderCalendar() {
     const calendar = document.getElementById("calendar");
     calendar.innerHTML = "";
-
     const today = normalizeDate(new Date());
 
     for (let i = -30; i <= 30; i++) {
@@ -959,16 +806,9 @@ function renderCalendar() {
 
         const day = document.createElement("div");
         day.className = "calendar-day";
+        if (isSameDay(date, today)) day.classList.add("today");
 
-        if (isSameDay(date, today)) {
-            day.classList.add("today");
-        }
-
-        const dateText = date.toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "2-digit"
-        });
-
+        const dateText = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
         let summary = "";
         let statusClass = "status-empty";
 
@@ -979,10 +819,7 @@ function renderCalendar() {
             summary = "Sem tarefas";
             statusClass = "status-empty";
         } else {
-            let igor = 0;
-            let wagner = 0;
-            let totalForFilter = 0;
-            let completedForFilter = 0;
+            let igor = 0, wagner = 0, totalForFilter = 0, completedForFilter = 0;
 
             tasks.forEach(taskId => {
                 const responsible = getResponsible(taskId, date, false);
@@ -992,52 +829,36 @@ function renderCalendar() {
                 if (historyFilter === "all" || responsible === historyFilter) {
                     if (responsible) {
                         totalForFilter++;
-                        if (isCompleted(taskId, date, responsible)) {
-                            completedForFilter++;
-                        }
+                        if (isCompleted(taskId, date, responsible)) completedForFilter++;
                     }
                 }
             });
 
             summary = `Igor: ${igor}<br>Wagner: ${wagner}`;
 
-            // Regra de Cores Pastel para o Calendário
             if (normDate > today) {
-                statusClass = "status-future"; // Azul pastel
+                statusClass = "status-future";
             } else if (totalForFilter === 0) {
                 statusClass = "status-empty";
             } else if (completedForFilter === totalForFilter) {
-                statusClass = "status-done";   // Verde pastel
+                statusClass = "status-done";
             } else if (completedForFilter > 0) {
-                statusClass = "status-partial"; // Amarelo pastel
+                statusClass = "status-partial";
             } else {
-                if (normDate < today) {
-                    statusClass = "status-overdue"; // Vermelho pastel
-                } else {
-                    statusClass = "status-partial"; // Amarelo/Pendente hoje
-                }
+                statusClass = normDate < today ? "status-overdue" : "status-partial";
             }
         }
 
         day.classList.add(statusClass);
-
-        day.innerHTML = `
-            <strong>${dateText}</strong>
-            <small>${summary}</small>
-        `;
-
+        day.innerHTML = `<strong>${dateText}</strong><small>${summary}</small>`;
         day.onclick = function() {
             selectedHistoryDate = date;
             renderHistoryDetails();
         };
-
         calendar.appendChild(day);
     }
 }
 
-/* =========================================
-   FILTRO E DETALHES DO HISTÓRICO
-========================================= */
 function setHistoryFilter(user) {
     historyFilter = user;
     renderCalendar();
@@ -1046,7 +867,6 @@ function setHistoryFilter(user) {
 
 function renderHistoryDetails() {
     const container = document.getElementById("historyDetails");
-
     if (!selectedHistoryDate) {
         container.innerHTML = "Clique em um dia do calendário.";
         return;
@@ -1061,22 +881,13 @@ function renderHistoryDetails() {
     }
 
     let html = "";
-
     tasks.forEach(taskId => {
         const responsible = getResponsible(taskId, date, false);
         const task = chores[taskId];
-
-        if (historyFilter !== "all" && responsible !== historyFilter) {
-            return;
-        }
+        if (historyFilter !== "all" && responsible !== historyFilter) return;
 
         if (!responsible) {
-            html += `
-                <div class="task">
-                    <span>${task.icon} ${task.name}</span>
-                    <span>🎲 A definir</span>
-                </div>
-            `;
+            html += `<div class="task"><span>${task.icon} ${task.name}</span><span>🎲 A definir</span></div>`;
             return;
         }
 
@@ -1087,32 +898,16 @@ function renderHistoryDetails() {
             <div class="task ${completed ? "done" : ""}">
                 <span>${task.icon} ${task.name}</span>
                 <span>👤 ${responsible}</span>
-                <span>
-                    ${
-                        completed
-                            ? "✅ Concluída"
-                            : (
-                                normalizeDate(date) < normalizeDate(new Date())
-                                    ? "⏰ Atrasada"
-                                    : "⬜ Pendente"
-                              )
-                    }
-                </span>
+                <span>${completed ? "✅ Concluída" : (normalizeDate(date) < normalizeDate(new Date()) ? "⏰ Atrasada" : "⬜ Pendente")}</span>
                 ${time ? `<small>${time}</small>` : ""}
             </div>
         `;
     });
 
-    if (html === "") {
-        html = "<p>Nenhuma atividade para este filtro.</p>";
-    }
-
+    if (html === "") html = "<p>Nenhuma atividade para este filtro.</p>";
     container.innerHTML = html;
 }
 
-/* =========================================
-   RESUMO DA SEMANA
-========================================= */
 function getMonday(date) {
     const d = normalizeDate(date);
     const day = d.getDay();
@@ -1125,14 +920,10 @@ function renderWeek() {
     const container = document.getElementById("weekSummary");
     const today = normalizeDate(new Date());
     const monday = getMonday(today);
-
     let html = "";
 
     USERS.forEach(user => {
-        let total = 0;
-        let completed = 0;
-        let points = 0;
-        let details = "";
+        let total = 0, completed = 0, points = 0, details = "";
 
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday.getTime() + i * DAY_MS);
@@ -1146,11 +937,7 @@ function renderWeek() {
                 const task = chores[taskId];
                 const done = isCompleted(taskId, date, user);
 
-                if (done) {
-                    completed++;
-                    points += task.points;
-                }
-
+                if (done) { completed++; points += task.points; }
                 const dayName = date.toLocaleDateString("pt-BR", { weekday: "long" });
 
                 details += `
@@ -1164,19 +951,13 @@ function renderWeek() {
         }
 
         const progress = total === 0 ? 0 : (completed / total) * 100;
-
         html += `
             <div class="summary-user card">
                 <h2>👤 ${user}</h2>
-                <p>
-                    <strong>${completed}</strong> de <strong>${total}</strong> atividades concluídas
-                </p>
+                <p><strong>${completed}</strong> de <strong>${total}</strong> atividades concluídas</p>
                 <p>⭐ Pontos: <strong>${points}</strong></p>
-                <div class="progress">
-                    <div class="progress-bar" style="width:${progress}%"></div>
-                </div>
-                <br>
-                ${details}
+                <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
+                <br>${details}
             </div>
         `;
     });
@@ -1184,15 +965,10 @@ function renderWeek() {
     container.innerHTML = html;
 }
 
-/* =========================================
-   TROCAR USUÁRIO E TELA
-========================================= */
 function selectUser(user) {
     currentUser = user;
-
     document.getElementById("btnIgor").classList.toggle("active", user === "Igor");
     document.getElementById("btnWagner").classList.toggle("active", user === "Wagner");
-
     renderToday();
 }
 
@@ -1201,9 +977,7 @@ function showScreen(screen) {
     document.getElementById("historyScreen").classList.add("hidden");
     document.getElementById("weekScreen").classList.add("hidden");
 
-    if (screen === "today") {
-        document.getElementById("todayScreen").classList.remove("hidden");
-    }
+    if (screen === "today") document.getElementById("todayScreen").classList.remove("hidden");
     if (screen === "history") {
         document.getElementById("historyScreen").classList.remove("hidden");
         renderCalendar();
@@ -1215,31 +989,19 @@ function showScreen(screen) {
     }
 }
 
-/* =========================================
-   INFORMAÇÕES ADICIONAIS E INICIALIZAÇÃO
-========================================= */
 function renderStarterInfo() {
     const today = normalizeDate(new Date());
     const element = document.getElementById("starterInfo");
-
     if (today < START_DATE) {
         element.textContent = " O sorteio inicial será realizado a partir de 17/09/2026.";
         return;
     }
-
-    const starter = getInitialStarter();
-    element.textContent = ` Quem começa a rotação é ${starter}.`;
+    element.textContent = ` Quem começa a rotação é ${getInitialStarter()}.`;
 }
 
 function renderDate() {
-    const today = new Date();
     document.getElementById("currentDate").textContent =
-        today.toLocaleDateString("pt-BR", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        });
+        new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
 function renderAll() {
@@ -1248,10 +1010,17 @@ function renderAll() {
     renderToday();
 }
 
-/* Iniciar Aplicação */
+/* REGISTRO DO APLICATIVO (SERVICE WORKER) */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("App PWA registrado com sucesso!"))
+            .catch(err => console.log("Erro ao registrar PWA:", err));
+    });
+}
+
 initTheme();
 renderAll();
-
 </script>
 </body>
 </html>
