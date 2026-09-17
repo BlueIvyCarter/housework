@@ -138,16 +138,6 @@
         padding: 24px 16px;
     }
 
-    .info {
-        background: var(--blueberry-light);
-        border-left: 4px solid var(--blueberry-accent);
-        padding: 14px 18px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        color: var(--text-color);
-        font-size: 15px;
-    }
-
     .users, .menu {
         display: flex;
         justify-content: center;
@@ -468,16 +458,13 @@
 
 <div class="container">
 
-    <div class="info">
-        <strong>🎲 Sorteio inicial:</strong>
-        <span id="starterInfo"></span>
-    </div>
-
+    <!-- Seleção de Usuários (Inicia com Wagner selecionado) -->
     <div class="users">
-        <button class="user-btn active" onclick="selectUser('Igor')" id="btnIgor">Igor</button>
-        <button class="user-btn" onclick="selectUser('Wagner')" id="btnWagner">Wagner</button>
+        <button class="user-btn" onclick="selectUser('Igor')" id="btnIgor">Igor</button>
+        <button class="user-btn active" onclick="selectUser('Wagner')" id="btnWagner">Wagner</button>
     </div>
 
+    <!-- Menu Centralizado -->
     <div class="menu">
         <button onclick="showScreen('today')">📋 Hoje</button>
         <button onclick="showScreen('history')">📅 Histórico</button>
@@ -558,10 +545,10 @@
 const USERS = ["Igor", "Wagner"];
 const START_DATE = new Date(2026, 8, 17);
 const DAY_MS = 24 * 60 * 60 * 1000;
-const STARTER_KEY = "rotina_casa_starter_v2";
 const THEME_KEY = "rotina_casa_theme";
 
-let currentUser = "Igor";
+// Usuário padrão inicial ajustado para Wagner
+let currentUser = "Wagner";
 let historyFilter = "all";
 let selectedHistoryDate = null;
 
@@ -617,19 +604,13 @@ function isSameDay(a, b) {
     return dateKey(a) === dateKey(b);
 }
 
-function getInitialStarter() {
-    let starter = localStorage.getItem(STARTER_KEY);
-    if (starter) return starter;
-    const starterUser = Math.random() < 0.5 ? "Igor" : "Wagner";
-    localStorage.setItem(STARTER_KEY, starterUser);
-    return starterUser;
-}
-
+// Rotação diária iniciando fixamente por Wagner (sem sorteio inicial)
 function getDailyUser(date) {
     if (isBeforeStart(date)) return null;
-    const starter = getInitialStarter();
-    const daysPassed = Math.floor((normalizeDate(date) - normalizeDate(START_DATE)) / DAY_MS);
-    return daysPassed % 2 === 0 ? starter : (starter === "Igor" ? "Wagner" : "Igor");
+    const start = normalizeDate(START_DATE);
+    const current = normalizeDate(date);
+    const daysPassed = Math.floor((current - start) / DAY_MS);
+    return daysPassed % 2 === 0 ? "Wagner" : "Igor";
 }
 
 function isMopDay(date) {
@@ -637,6 +618,7 @@ function isMopDay(date) {
     return day === 1 || day === 3 || day === 5;
 }
 
+// SORTEIO MANTIDO: Apenas para quem passa o pano nos dias de pano
 function getMopResponsible(date, create = true) {
     if (!isMopDay(date) || isBeforeStart(date)) return null;
     const key = "rotina_casa_mop_" + dateKey(date);
@@ -989,16 +971,6 @@ function showScreen(screen) {
     }
 }
 
-function renderStarterInfo() {
-    const today = normalizeDate(new Date());
-    const element = document.getElementById("starterInfo");
-    if (today < START_DATE) {
-        element.textContent = " O sorteio inicial será realizado a partir de 17/09/2026.";
-        return;
-    }
-    element.textContent = ` Quem começa a rotação é ${getInitialStarter()}.`;
-}
-
 function renderDate() {
     document.getElementById("currentDate").textContent =
         new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -1006,11 +978,10 @@ function renderDate() {
 
 function renderAll() {
     renderDate();
-    renderStarterInfo();
     renderToday();
 }
 
-/* REGISTRO DO APLICATIVO (SERVICE WORKER) */
+/* REGISTRO DO APLICATIVO (SERVICE WORKER PWA) */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
