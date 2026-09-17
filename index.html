@@ -1,22 +1,50 @@
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotina da Casa (Sincronizado + Confete + Lembretes + Calendário Mensal)</title>
-
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#23264A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Rotina Casa">
-<link rel="apple-touch-icon" href="icon-192.png">
+<title>Rotina da Casa</title>
 
-<!-- Biblioteca de Confete -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<!-- Web App Manifest Inline para Suporte a PWA (Adicionar à Tela Inicial) -->
+<link rel="manifest" href="data:application/manifest+json,{
+  %22name%22:%22Rotina%20da%20Casa%22,
+  %22short_name%22:%22Rotina%22,
+  %22start_url%22:%22.%22,
+  %22display%22:%22standalone%22,
+  %22background_color%22:%22%2323264A%22,
+  %22theme_color%22:%22%2323264A%22,
+  %22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/3063/3063822.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]
+}">
+
+<!-- Biblioteca para Efeito Confete -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<!-- Integração Firebase v10 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // Configuração do seu projeto Firebase
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
+  };
+
+  // Inicializa o Firebase
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+</script>
 
 <style>
     :root {
+        /* Tema Claro */
         --blueberry-dark: #23264A;
         --blueberry-main: #3B3E6E;
         --blueberry-accent: #5C62AC;
@@ -32,6 +60,7 @@ html_content = """<!DOCTYPE html>
         --danger-color: #D93838;
         --danger-bg: #FFF0F0;
 
+        /* Cores Pastel do Calendário */
         --cal-done-bg: #D1E7DD;
         --cal-done-text: #0F5132;
         --cal-partial-bg: #FFF3CD;
@@ -45,6 +74,7 @@ html_content = """<!DOCTYPE html>
     }
 
     body.dark-mode {
+        /* Tema Escuro */
         --blueberry-dark: #121424;
         --blueberry-main: #5C62AC;
         --blueberry-accent: #7A80D4;
@@ -60,6 +90,7 @@ html_content = """<!DOCTYPE html>
         --danger-color: #FF6B6B;
         --danger-bg: #321A20;
 
+        /* Cores Pastel Ajustadas para Tema Escuro */
         --cal-done-bg: #143A27;
         --cal-done-text: #A3E635;
         --cal-partial-bg: #3E320D;
@@ -72,7 +103,9 @@ html_content = """<!DOCTYPE html>
         --cal-empty-text: #94A3B8;
     }
 
-    * { box-sizing: border-box; }
+    * {
+        box-sizing: border-box;
+    }
 
     body {
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -82,7 +115,6 @@ html_content = """<!DOCTYPE html>
         color: var(--text-color);
         line-height: 1.5;
         transition: background 0.3s ease, color 0.3s ease;
-        -webkit-tap-highlight-color: transparent;
     }
 
     header {
@@ -97,8 +129,18 @@ html_content = """<!DOCTYPE html>
         gap: 12px;
     }
 
-    header h1 { margin: 0; font-size: 26px; font-weight: 700; }
-    header p { margin: 0; opacity: 0.88; font-size: 14px; }
+    header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    header p {
+        margin: 0;
+        opacity: 0.88;
+        font-size: 14px;
+    }
 
     .header-actions {
         display: flex;
@@ -107,7 +149,8 @@ html_content = """<!DOCTYPE html>
         justify-content: center;
     }
 
-    .theme-toggle-btn, .notif-btn {
+    /* Botão de Tema e Notificação */
+    .action-btn {
         background: rgba(255, 255, 255, 0.15);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.3);
@@ -120,14 +163,26 @@ html_content = """<!DOCTYPE html>
         transition: all 0.2s ease;
     }
 
-    .container { max-width: 900px; margin: auto; padding: 24px 16px; }
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.28);
+        transform: translateY(-1px);
+    }
 
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 24px 16px;
+    }
+
+    /* Centralização dos Botões de Usuário e Menu */
     .users, .menu {
         display: flex;
         justify-content: center;
-        gap: 10px;
+        align-items: center;
+        gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 20px;
+        width: 100%;
     }
 
     button {
@@ -141,7 +196,22 @@ html_content = """<!DOCTYPE html>
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .user-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); }
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    .user-btn {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        min-width: 120px;
+    }
+
     .user-btn.active {
         background: var(--blueberry-main);
         color: white;
@@ -149,7 +219,11 @@ html_content = """<!DOCTYPE html>
         box-shadow: 0 4px 10px rgba(92, 98, 172, 0.3);
     }
 
-    .menu button { background: var(--blueberry-accent); color: white; }
+    .menu button {
+        background: var(--blueberry-accent);
+        color: white;
+        min-width: 100px;
+    }
 
     .card {
         background: var(--card-bg);
@@ -158,11 +232,24 @@ html_content = """<!DOCTYPE html>
         margin-bottom: 20px;
         border: 1px solid var(--border-color);
         box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        transition: background 0.3s ease, border-color 0.3s ease;
     }
 
-    h2 { margin-top: 0; margin-bottom: 16px; font-size: 20px; color: var(--text-color); font-weight: 700; }
+    h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 20px;
+        color: var(--text-color);
+        font-weight: 700;
+    }
 
-    .today-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    /* Contagem de Estatísticas e Tarefas Pendentes */
+    .today-stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
 
     .stat-badge {
         background: var(--blueberry-light);
@@ -175,12 +262,39 @@ html_content = """<!DOCTYPE html>
         border: 1px solid var(--border-color);
     }
 
-    .stat-badge.pending-badge { background: var(--cal-partial-bg); color: var(--cal-partial-text); border-color: rgba(234, 179, 8, 0.3); }
-    .stat-badge.overdue-badge { background: var(--danger-bg); color: var(--danger-color); border-color: rgba(229, 62, 62, 0.2); }
+    .stat-badge.pending-badge {
+        background: var(--cal-partial-bg);
+        color: var(--cal-partial-text);
+        border-color: rgba(234, 179, 8, 0.3);
+    }
 
-    .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-    .stat-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+    .stat-badge.overdue-badge {
+        background: var(--danger-bg);
+        color: var(--danger-color);
+        border-color: rgba(229, 62, 62, 0.2);
+    }
 
+    .stat-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .stat-badge.pending-badge .stat-label {
+        color: var(--cal-partial-text);
+    }
+
+    .stat-badge.overdue-badge .stat-label {
+        color: var(--danger-color);
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+    /* Animação e Estilo das Tarefas */
     .task {
         display: flex;
         align-items: center;
@@ -188,10 +302,44 @@ html_content = """<!DOCTYPE html>
         padding: 12px 14px;
         border-radius: 10px;
         border-bottom: 1px solid var(--border-color);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .task input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--blueberry-accent); cursor: pointer; }
-    .task.done { text-decoration: line-through; opacity: 0.55; }
+    .task:hover {
+        background: var(--blueberry-light);
+    }
+
+    .task:last-child {
+        border-bottom: none;
+    }
+
+    .task input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--blueberry-accent);
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .task input[type="checkbox"]:hover {
+        transform: scale(1.15);
+    }
+
+    .task.done {
+        text-decoration: line-through;
+        opacity: 0.55;
+    }
+
+    /* Animação de Conclusão */
+    .task-completed-anim {
+        animation: taskPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes taskPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); background-color: var(--cal-done-bg); }
+        100% { transform: scale(1); }
+    }
 
     .points {
         margin-left: auto;
@@ -211,9 +359,41 @@ html_content = """<!DOCTYPE html>
         margin-bottom: 12px;
     }
 
-    .overdue strong { color: var(--danger-color); font-size: 13px; display: block; margin-bottom: 6px; }
-    .overdue .task { padding: 6px 0; border-bottom: none; background: transparent; }
+    .overdue strong {
+        color: var(--danger-color);
+        font-size: 13px;
+        display: block;
+        margin-bottom: 6px;
+    }
 
+    .overdue .task {
+        padding: 6px 0;
+        border-bottom: none;
+        background: transparent;
+    }
+
+    /* Navegação do Mês no Calendário */
+    .calendar-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .calendar-nav button {
+        background: var(--blueberry-light);
+        color: var(--text-color);
+        padding: 8px 14px;
+        border-radius: 8px;
+    }
+
+    .calendar-nav h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    /* Legenda do Calendário Pastel */
     .calendar-legend {
         display: flex;
         justify-content: center;
@@ -224,79 +404,95 @@ html_content = """<!DOCTYPE html>
         font-weight: 600;
     }
 
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-
-    /* Estilos do Navegador de Mês */
-    .calendar-month-nav {
+    .legend-item {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-        background: var(--blueberry-light);
-        padding: 8px 16px;
-        border-radius: 12px;
+        gap: 6px;
     }
 
-    .calendar-month-nav button {
-        background: var(--blueberry-main);
-        color: white;
-        padding: 6px 14px;
-        font-size: 13px;
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
     }
 
-    .month-title {
-        font-weight: 700;
-        font-size: 16px;
-        text-transform: capitalize;
-    }
-
-    .calendar-weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        font-weight: 700;
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-bottom: 8px;
-    }
-
-    .calendar-grid {
+    /* Grid do Calendário */
+    .calendar {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 6px;
     }
 
+    .calendar-header-day {
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 6px 0;
+        color: var(--text-muted);
+    }
+
     .calendar-day {
         min-height: 75px;
-        padding: 6px;
+        padding: 8px;
         border-radius: 10px;
         cursor: pointer;
         border: 2px solid transparent;
+        transition: all 0.2s ease;
         box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
     }
 
-    .calendar-day.empty-slot {
-        background: transparent !important;
-        border: none !important;
-        cursor: default;
-        box-shadow: none;
+    .calendar-day:hover {
+        transform: translateY(-2px);
+        filter: brightness(0.96);
     }
 
-    .calendar-day.today { border-color: var(--text-color) !important; font-weight: bold; }
-    .calendar-day strong { font-size: 13px; display: block; }
-    .calendar-day small { display: block; margin-top: 4px; font-size: 10px; line-height: 1.2; opacity: 0.9; }
+    .calendar-day.today {
+        border-color: var(--text-color) !important;
+    }
 
-    .status-done { background-color: var(--cal-done-bg) !important; color: var(--cal-done-text) !important; }
-    .status-partial { background-color: var(--cal-partial-bg) !important; color: var(--cal-partial-text) !important; }
-    .status-overdue { background-color: var(--cal-overdue-bg) !important; color: var(--cal-overdue-text) !important; }
-    .status-future { background-color: var(--cal-future-bg) !important; color: var(--cal-future-text) !important; }
-    .status-empty { background-color: var(--cal-empty-bg) !important; color: var(--cal-empty-text) !important; }
+    .calendar-day strong {
+        font-size: 13px;
+        display: block;
+    }
 
-    .hidden { display: none !important; }
+    .calendar-day small {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        line-height: 1.2;
+        opacity: 0.9;
+    }
+
+    /* Status Pastel */
+    .status-done {
+        background-color: var(--cal-done-bg) !important;
+        color: var(--cal-done-text) !important;
+    }
+    .status-partial {
+        background-color: var(--cal-partial-bg) !important;
+        color: var(--cal-partial-text) !important;
+    }
+    .status-overdue {
+        background-color: var(--cal-overdue-bg) !important;
+        color: var(--cal-overdue-text) !important;
+    }
+    .status-future {
+        background-color: var(--cal-future-bg) !important;
+        color: var(--cal-future-text) !important;
+    }
+    .status-empty {
+        background-color: var(--cal-empty-bg) !important;
+        color: var(--cal-empty-text) !important;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .summary-user {
+        margin-bottom: 20px;
+    }
 
     .progress {
         background: var(--border-color);
@@ -315,13 +511,21 @@ html_content = """<!DOCTYPE html>
         transition: width 0.4s ease;
     }
 
-    .sync-status {
-        font-size: 12px;
-        color: #10B981;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        justify-content: center;
+    @media (max-width: 600px) {
+        .calendar {
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .calendar-day {
+            min-height: 60px;
+            padding: 4px;
+        }
+        .calendar-day small {
+            font-size: 9px;
+        }
+        .container {
+            padding: 16px 12px;
+        }
     }
 </style>
 </head>
@@ -332,32 +536,40 @@ html_content = """<!DOCTYPE html>
     <div>
         <h1>🏠 Rotina da Casa</h1>
         <p id="currentDate"></p>
-        <span class="sync-status">🟢 Sincronizado em Tempo Real</span>
     </div>
     <div class="header-actions">
-        <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()">🔔 Ativar Lembretes</button>
-        <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+        <button class="action-btn" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+        <button class="action-btn" onclick="requestNotificationPermission()">🔔 Notificações</button>
     </div>
 </header>
 
 <div class="container">
 
+    <!-- Botões de Usuário Centralizados (Wagner padrão) -->
     <div class="users">
-        <button class="user-btn" onclick="selectUser('Igor')" id="btnIgor">Igor</button>
-        <button class="user-btn active" onclick="selectUser('Wagner')" id="btnWagner">Wagner</button>
+        <button class="user-btn" onclick="selectUser('Igor')" id="btnIgor">
+            Igor
+        </button>
+
+        <button class="user-btn active" onclick="selectUser('Wagner')" id="btnWagner">
+            Wagner
+        </button>
     </div>
 
+    <!-- Menu Centralizado -->
     <div class="menu">
         <button onclick="showScreen('today')">📋 Hoje</button>
         <button onclick="showScreen('history')">📅 Histórico</button>
         <button onclick="showScreen('week')">📊 Semana</button>
     </div>
 
-    <!-- HOJE -->
+    <!-- TELA HOJE -->
     <section id="todayScreen">
-        <div class="card">
-            <h2>📋 Tarefas de hoje — <span id="todayUser"></span></h2>
 
+        <div class="card">
+            <h2>📋 Tarefas de hoje — <span id="todayUser">Wagner</span></h2>
+
+            <!-- Estatísticas e Contagem de Pendentes -->
             <div class="today-stats">
                 <div class="stat-badge">
                     <span class="stat-label">⭐ Pontos Hoje</span>
@@ -384,157 +596,116 @@ html_content = """<!DOCTYPE html>
             <h2>⏰ Tarefas atrasadas</h2>
             <div id="overdueTasks"></div>
         </div>
+
     </section>
 
-    <!-- HISTÓRICO -->
+    <!-- TELA HISTÓRICO -->
     <section id="historyScreen" class="hidden">
+
         <div class="card">
-            <h2>📅 Histórico de Tarefas</h2>
+            <h2>📅 Histórico</h2>
 
             <div class="users">
-                <button onclick="setHistoryFilter('all')">Todos</button>
-                <button onclick="setHistoryFilter('Igor')">Igor</button>
-                <button onclick="setHistoryFilter('Wagner')">Wagner</button>
+                <button class="user-btn" onclick="setHistoryFilter('all')">Todos</button>
+                <button class="user-btn" onclick="setHistoryFilter('Igor')">Igor</button>
+                <button class="user-btn" onclick="setHistoryFilter('Wagner')">Wagner</button>
             </div>
 
+            <!-- Navegação por Mês -->
+            <div class="calendar-nav">
+                <button onclick="changeMonth(-1)">◀ Anterior</button>
+                <h3 id="calendarMonthYear"></h3>
+                <button onclick="changeMonth(1)">Próximo ▶</button>
+            </div>
+
+            <!-- Legenda das Cores Pastel -->
             <div class="calendar-legend">
-                <span class="legend-item"><span class="legend-dot status-done"></span> Concluído</span>
-                <span class="legend-item"><span class="legend-dot status-partial"></span> Parcial/Pendente</span>
-                <span class="legend-item"><span class="legend-dot status-overdue"></span> Atrasado</span>
-                <span class="legend-item"><span class="legend-dot status-future"></span> Futuro</span>
+                <span class="legend-item"><span class="legend-dot status-done"></span> Concluído (Verde)</span>
+                <span class="legend-item"><span class="legend-dot status-partial"></span> Parcial (Amarelo)</span>
+                <span class="legend-item"><span class="legend-dot status-overdue"></span> Atrasado (Vermelho)</span>
+                <span class="legend-item"><span class="legend-dot status-future"></span> Futuro (Azul)</span>
             </div>
 
-            <!-- Navegador de Mês -->
-            <div class="calendar-month-nav">
-                <button onclick="changeMonth(-1)">◄ Mês Anterior</button>
-                <span class="month-title" id="monthTitle"></span>
-                <button onclick="changeMonth(1)">Próximo Mês ►</button>
-            </div>
-
-            <div class="calendar-weekdays">
-                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-            </div>
-
-            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar" id="calendar"></div>
         </div>
 
         <div class="card">
             <h2>Detalhes do dia</h2>
-            <div id="historyDetails">Clique em um dia do calendário.</div>
+            <div id="historyDetails">
+                Clique em um dia do calendário.
+            </div>
         </div>
+
     </section>
 
-    <!-- SEMANA -->
+    <!-- TELA SEMANA -->
     <section id="weekScreen" class="hidden">
+
         <div class="card">
             <h2>📊 Resumo da semana</h2>
             <div id="weekSummary"></div>
         </div>
+
     </section>
 
 </div>
 
-<!-- INTEGRAÇÃO COM O FIREBASE EM TEMPO REAL -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// ⚠️ COLE SUAS CHAVES DO FIREBASE AQUI ⚠️
-const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO_ID",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "SUA_APP_ID"
-};
-
-// Inicializa Firebase & Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Estado local sincronizado
-let remoteCompletions = {};
-let remoteMop = {};
-
-// Escuta alterações de tarefas concluídas em tempo real
-onSnapshot(collection(db, "completions"), (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-        if (change.type === "removed") {
-            delete remoteCompletions[change.doc.id];
-        } else {
-            remoteCompletions[change.doc.id] = change.doc.data();
-        }
-    });
-    renderAll();
-});
-
-// Escuta sorteios de passar pano em tempo real
-onSnapshot(collection(db, "mop_draws"), (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-        if (change.type === "removed") {
-            delete remoteMop[change.doc.id];
-        } else {
-            remoteMop[change.doc.id] = change.doc.data().user;
-        }
-    });
-    renderAll();
-});
-
-// Torna as funções globais para usar no HTML
-window.toggleTask = async function(taskId, dateKeyValue, user) {
-    const docId = `${dateKeyValue}_${taskId}_${user}`;
-    const docRef = doc(db, "completions", docId);
-
-    if (remoteCompletions[docId]?.completed) {
-        await deleteDoc(docRef);
-    } else {
-        await setDoc(docRef, {
-            completed: true,
-            time: new Date().toLocaleString("pt-BR")
-        });
-    }
-};
-
-window.getMopResponsible = function(date, create = true) {
-    if (!isMopDay(date) || isBeforeStart(date)) return null;
-    const key = dateKey(date);
-    if (remoteMop[key]) return remoteMop[key];
-
-    if (!create && normalizeDate(date) > normalizeDate(new Date())) return null;
-    if (!create) return null;
-
-    const responsible = Math.random() < 0.5 ? "Igor" : "Wagner";
-    setDoc(doc(db, "mop_draws", key), { user: responsible });
-    return responsible;
-};
-
-window.isCompleted = function(taskId, date, user) {
-    const docId = `${dateKey(date)}_${taskId}_${user}`;
-    return !!remoteCompletions[docId]?.completed;
-};
-
-window.getCompletionTime = function(taskId, date, user) {
-    const docId = `${dateKey(date)}_${taskId}_${user}`;
-    return remoteCompletions[docId]?.time || null;
-};
-</script>
-
 <script>
+
 const USERS = ["Igor", "Wagner"];
 const START_DATE = new Date(2026, 8, 17);
 const DAY_MS = 24 * 60 * 60 * 1000;
+const STARTER_KEY = "rotina_casa_starter_v2";
 const THEME_KEY = "rotina_casa_theme";
 
+// Início Padrão no usuário Wagner
 let currentUser = "Wagner";
 let historyFilter = "all";
 let selectedHistoryDate = null;
-let confettiTriggeredToday = false;
 
-// Estado da Navegação por Mês no Calendário
-let calendarViewYear = new Date().getFullYear();
-let calendarViewMonth = new Date().getMonth();
+// Navegação do Calendário por Mês
+let calendarDate = new Date();
 
+/* =========================================
+   PWA & SERVICE WORKER
+========================================= */
+if ('serviceWorker' in navigator) {
+    const swCode = `
+        self.addEventListener('install', (e) => self.skipWaiting());
+        self.addEventListener('activate', (e) => self.clients.claim());
+        self.addEventListener('push', (e) => {
+            const data = e.data ? e.data.json() : {};
+            self.registration.showNotification(data.title || 'Rotina da Casa', {
+                body: data.body || 'Lembrete de tarefas pendentes!',
+                icon: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png'
+            });
+        });
+    `;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+}
+
+/* =========================================
+   NOTIFICAÇÕES PUSH / LEMBRETES
+========================================= */
+function requestNotificationPermission() {
+    if (!("Notification" in window)) {
+        alert("Este navegador não suporta notificações.");
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            new Notification("Rotina da Casa", {
+                body: "Notificações ativadas com sucesso! Você receberá lembretes de tarefas.",
+                icon: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png"
+            });
+        }
+    });
+}
+
+/* =========================================
+   GERENCIAMENTO DE TEMA (CLARO/ESCURO)
+========================================= */
 function toggleTheme() {
     document.body.classList.toggle("dark-mode");
     const isDark = document.body.classList.contains("dark-mode");
@@ -545,60 +716,22 @@ function toggleTheme() {
 function updateThemeBtn() {
     const isDark = document.body.classList.contains("dark-mode");
     const btn = document.getElementById("themeBtn");
-    if (btn) btn.textContent = isDark ? "☀️ Modo Claro" : "🌙 Modo Escuro";
+    if (btn) {
+        btn.textContent = isDark ? "☀️ Modo Claro" : "🌙 Modo Escuro";
+    }
 }
 
 function initTheme() {
-    if (localStorage.getItem(THEME_KEY) === "dark") document.body.classList.add("dark-mode");
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+    }
     updateThemeBtn();
 }
 
-/* 🔔 GERENCIADOR DE NOTIFICAÇÕES PUSH */
-function toggleNotifications() {
-    if (!("Notification" in window)) {
-        alert("Seu navegador não suporta Notificações.");
-        return;
-    }
-
-    if (Notification.permission === "granted") {
-        alert("As notificações já estão ativadas para este dispositivo!");
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                new Notification("🏠 Rotina da Casa", {
-                    body: "Lembretes e notificações ativados com sucesso!",
-                    icon: "icon-192.png"
-                });
-                updateNotifBtn();
-            }
-        });
-    } else {
-        alert("A permissão de notificação foi bloqueada no navegador. Desbloqueie nas configurações do seu celular.");
-    }
-}
-
-function updateNotifBtn() {
-    const btn = document.getElementById("notifBtn");
-    if ("Notification" in window && Notification.permission === "granted") {
-        btn.textContent = "🔔 Lembretes Ativos";
-        btn.style.opacity = "0.8";
-    }
-}
-
-function checkAndSendReminder(pendingCount) {
-    if ("Notification" in window && Notification.permission === "granted" && pendingCount > 0) {
-        // Envia notificação local caso haja tarefas pendentes no momento
-        const now = new Date();
-        if (now.getHours() >= 18) { // Lembrete após as 18h
-            new Notification("🏠 Lembrete de Tarefas", {
-                body: `Olá ${currentUser}! Você ainda tem ${pendingCount} tarefa(s) pendente(s) hoje.`,
-                icon: "icon-192.png",
-                tag: "daily-reminder"
-            });
-        }
-    }
-}
-
+/* =========================================
+   ATIVIDADES
+========================================= */
 const chores = {
     sweep: { name: "Varrer a casa", icon: "🧹", points: 10 },
     mop: { name: "Passar pano", icon: "🧽", points: 15 },
@@ -608,29 +741,73 @@ const chores = {
     dust: { name: "Tirar o pó", icon: "🧹", points: 10 }
 };
 
+/* =========================================
+   DATAS UTILITÁRIAS
+========================================= */
 function normalizeDate(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function dateKey(date) {
     const d = normalizeDate(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
-function isBeforeStart(date) { return normalizeDate(date) < normalizeDate(START_DATE); }
-function isSameDay(a, b) { return dateKey(a) === dateKey(b); }
+function dateFromKey(key) {
+    const parts = key.split("-");
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+}
+
+function isBeforeStart(date) {
+    return normalizeDate(date) < normalizeDate(START_DATE);
+}
+
+function isSameDay(a, b) {
+    return dateKey(a) === dateKey(b);
+}
+
+/* =========================================
+   LÓGICA DE ROTAÇÃO DIÁRIA E PASSAR PANO
+========================================= */
+function getInitialStarter() {
+    let starter = localStorage.getItem(STARTER_KEY);
+    if (starter) return starter;
+    const starterUser = "Wagner"; // Definido para iniciar com Wagner
+    localStorage.setItem(STARTER_KEY, starterUser);
+    return starterUser;
+}
 
 function getDailyUser(date) {
     if (isBeforeStart(date)) return null;
+    const starter = getInitialStarter();
     const start = normalizeDate(START_DATE);
     const current = normalizeDate(date);
     const daysPassed = Math.floor((current - start) / DAY_MS);
-    return daysPassed % 2 === 0 ? "Wagner" : "Igor";
+    if (daysPassed % 2 === 0) return starter;
+    return starter === "Igor" ? "Wagner" : "Igor";
 }
 
 function isMopDay(date) {
     const day = date.getDay();
     return day === 1 || day === 3 || day === 5;
+}
+
+// Mantida a função de sorteio para Passar Pano
+function getMopResponsible(date, create = true) {
+    if (!isMopDay(date) || isBeforeStart(date)) return null;
+    const key = "rotina_casa_mop_" + dateKey(date);
+    let responsible = localStorage.getItem(key);
+    if (responsible) return responsible;
+    const today = normalizeDate(new Date());
+    if (!create && normalizeDate(date) > today) return null;
+    if (!create) return null;
+    
+    responsible = Math.random() < 0.5 ? "Igor" : "Wagner";
+    localStorage.setItem(key, responsible);
+    return responsible;
 }
 
 function getScheduledChores(date) {
@@ -645,18 +822,72 @@ function getScheduledChores(date) {
 
 function getResponsible(taskId, date, create = true) {
     if (taskId === "mop" || (taskId === "sweep" && isMopDay(date))) {
-        return window.getMopResponsible(date, create);
+        return getMopResponsible(date, create);
     }
     return getDailyUser(date);
 }
 
+/* =========================================
+   COMPLETAR TAREFAS & CONFETE
+========================================= */
+function completionKey(taskId, date, user) {
+    return "rotina_casa_done_" + dateKey(date) + "_" + taskId + "_" + user;
+}
+
+function isCompleted(taskId, date, user) {
+    return localStorage.getItem(completionKey(taskId, date, user)) === "true";
+}
+
+function setCompleted(taskId, date, user, completed) {
+    const key = completionKey(taskId, date, user);
+    if (completed) {
+        localStorage.setItem(key, "true");
+        localStorage.setItem(key + "_time", new Date().toLocaleString("pt-BR"));
+    } else {
+        localStorage.removeItem(key);
+        localStorage.removeItem(key + "_time");
+    }
+}
+
+function toggleTask(taskId, dateKeyValue, user, event) {
+    const date = dateFromKey(dateKeyValue);
+    const current = isCompleted(taskId, date, user);
+    const willBeCompleted = !current;
+    
+    setCompleted(taskId, date, user, willBeCompleted);
+
+    // Efeito de Confete ao Concluir
+    if (willBeCompleted && typeof confetti === 'function') {
+        confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.7 }
+        });
+    }
+
+    if (event && event.target) {
+        const taskEl = event.target.closest('.task');
+        if (taskEl) {
+            taskEl.classList.add('task-completed-anim');
+            setTimeout(() => { renderAll(); }, 250);
+            return;
+        }
+    }
+    renderAll();
+}
+
+/* =========================================
+   TELA HOJE & CONTAGEM DE PENDENTES
+========================================= */
 function renderToday() {
     const today = normalizeDate(new Date());
     const container = document.getElementById("todayTasks");
+    const overdueContainer = document.getElementById("overdueTasks");
     document.getElementById("todayUser").textContent = currentUser;
 
     if (isBeforeStart(today)) {
-        container.innerHTML = "<p>🎲 A rotina começa em 17/09/2026.</p>";
+        container.innerHTML = "<p>A rotina começará em breve.</p>";
+        overdueContainer.innerHTML = "<p>Nenhuma tarefa atrasada.</p>";
         return;
     }
 
@@ -671,48 +902,46 @@ function renderToday() {
         if (responsible !== currentUser) return;
 
         const task = chores[taskId];
-        const completed = window.isCompleted(taskId, today, currentUser);
+        const completed = isCompleted(taskId, today, currentUser);
 
-        if (completed) { completedCount++; points += task.points; }
-        else { pendingToday++; }
+        if (completed) {
+            completedCount++;
+            points += task.points;
+        } else {
+            pendingToday++;
+        }
 
         html += `
             <div class="task ${completed ? "done" : ""}">
-                <input type="checkbox" ${completed ? "checked" : ""} onchange="window.toggleTask('${taskId}', '${dateKey(today)}', '${currentUser}')">
+                <input
+                    type="checkbox"
+                    ${completed ? "checked" : ""}
+                    onchange="toggleTask('${taskId}', '${dateKey(today)}', '${currentUser}', event)"
+                >
                 <span>${task.icon} ${task.name}</span>
                 <span class="points">${task.points} pts</span>
             </div>
         `;
     });
 
-    container.innerHTML = html || "<p>Você não tem atividades para hoje. 😊</p>";
+    if (html === "") {
+        html = "<p>Você não tem atividades atribuídas para hoje. 😊</p>";
+    }
+
+    container.innerHTML = html;
     document.getElementById("todayPoints").textContent = points;
     document.getElementById("todayPending").textContent = pendingToday;
 
-    const myTasksCount = tasks.filter(taskId => getResponsible(taskId, today, true) === currentUser).length;
-    const progress = myTasksCount === 0 ? 0 : (completedCount / myTasksCount) * 100;
+    const totalTasks = tasks.filter(taskId => getResponsible(taskId, today, true) === currentUser).length;
+    const progress = totalTasks === 0 ? 0 : (completedCount / totalTasks) * 100;
     document.getElementById("todayProgress").style.width = progress + "%";
 
-    /* 🎉 EFEITO DE CONFETE (COMEMORAÇÃO 100% CONCLUÍDO) */
-    if (progress === 100 && myTasksCount > 0) {
-        if (!confettiTriggeredToday) {
-            confettiTriggeredToday = true;
-            if (typeof confetti === "function") {
-                confetti({
-                    particleCount: 120,
-                    spread: 80,
-                    origin: { y: 0.6 }
-                });
-            }
-        }
-    } else {
-        confettiTriggeredToday = false;
-    }
-
-    checkAndSendReminder(pendingToday);
     renderOverdue();
 }
 
+/* =========================================
+   TAREFAS ATRASADAS
+========================================= */
 function renderOverdue() {
     const container = document.getElementById("overdueTasks");
     const today = normalizeDate(new Date());
@@ -727,7 +956,7 @@ function renderOverdue() {
         tasks.forEach(taskId => {
             const responsible = getResponsible(taskId, date, true);
             if (responsible !== currentUser) return;
-            if (window.isCompleted(taskId, date, currentUser)) return;
+            if (isCompleted(taskId, date, currentUser)) return;
 
             totalOverdueCount++;
             const task = chores[taskId];
@@ -736,7 +965,10 @@ function renderOverdue() {
                 <div class="overdue">
                     <strong>${date.toLocaleDateString("pt-BR")}</strong>
                     <div class="task">
-                        <input type="checkbox" onchange="window.toggleTask('${taskId}', '${dateKey(date)}', '${currentUser}')">
+                        <input
+                            type="checkbox"
+                            onchange="toggleTask('${taskId}', '${dateKey(date)}', '${currentUser}', event)"
+                        >
                         <span>${task.icon} ${task.name}</span>
                         <span class="points">${task.points} pts</span>
                     </div>
@@ -746,60 +978,78 @@ function renderOverdue() {
     }
 
     document.getElementById("totalOverdue").textContent = totalOverdueCount;
-    container.innerHTML = html || "<p>🎉 Nenhuma tarefa atrasada!</p>";
+
+    if (html === "") {
+        html = "<p>🎉 Nenhuma tarefa atrasada!</p>";
+    }
+
+    container.innerHTML = html;
 }
 
-/* 📅 NAVEGAÇÃO POR MÊS NO CALENDÁRIO */
-function changeMonth(offset) {
-    calendarViewMonth += offset;
-    if (calendarViewMonth < 0) {
-        calendarViewMonth = 11;
-        calendarViewYear--;
-    } else if (calendarViewMonth > 11) {
-        calendarViewMonth = 0;
-        calendarViewYear++;
-    }
+/* =========================================
+   NAVEGAÇÃO POR MÊS E CALENDÁRIO PASTEL
+========================================= */
+function changeMonth(delta) {
+    calendarDate.setMonth(calendarDate.getMonth() + delta);
     renderCalendar();
 }
 
 function renderCalendar() {
-    const grid = document.getElementById("calendarGrid");
-    grid.innerHTML = "";
+    const calendar = document.getElementById("calendar");
+    calendar.innerHTML = "";
+
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+
+    const monthNames = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    document.getElementById("calendarMonthYear").textContent = `${monthNames[month]} ${year}`;
+
+    // Cabeçalho dos dias da semana
+    const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    daysOfWeek.forEach(d => {
+        const header = document.createElement("div");
+        header.className = "calendar-header-day";
+        header.textContent = d;
+        calendar.appendChild(header);
+    });
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
     const today = normalizeDate(new Date());
 
-    const firstDayOfMonth = new Date(calendarViewYear, calendarViewMonth, 1);
-    const lastDayOfMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0);
-
-    // Atualiza o Título do Mês
-    const monthName = firstDayOfMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-    document.getElementById("monthTitle").textContent = monthName;
-
-    // Dia da semana do primeiro dia (0 = Domingo)
-    const startDayOfWeek = firstDayOfMonth.getDay();
-
-    // Cria células vazias para alinhamento dos dias da semana
-    for (let i = 0; i < startDayOfWeek; i++) {
+    // Espaços vazios do início do mês
+    for (let x = 0; x < firstDayIndex; x++) {
         const emptyCell = document.createElement("div");
-        emptyCell.className = "calendar-day empty-slot";
-        grid.appendChild(emptyCell);
+        calendar.appendChild(emptyCell);
     }
 
-    // Renderiza cada dia do mês
-    const totalDays = lastDayOfMonth.getDate();
     for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
-        const date = new Date(calendarViewYear, calendarViewMonth, dayNum);
+        const date = new Date(year, month, dayNum);
         const normDate = normalizeDate(date);
         const tasks = getScheduledChores(date);
 
-        const day = document.createElement("div");
-        day.className = "calendar-day";
-        if (isSameDay(date, today)) day.classList.add("today");
+        const dayCell = document.createElement("div");
+        dayCell.className = "calendar-day";
+
+        if (isSameDay(date, today)) {
+            dayCell.classList.add("today");
+        }
 
         let summary = "";
         let statusClass = "status-empty";
 
-        if (!isBeforeStart(date) && tasks.length > 0) {
-            let igor = 0, wagner = 0, totalForFilter = 0, completedForFilter = 0;
+        if (isBeforeStart(date)) {
+            summary = "Sem registro";
+            statusClass = "status-empty";
+        } else if (tasks.length === 0) {
+            summary = "Folga";
+            statusClass = "status-empty";
+        } else {
+            let igor = 0, wagner = 0;
+            let totalForFilter = 0, completedForFilter = 0;
 
             tasks.forEach(taskId => {
                 const responsible = getResponsible(taskId, date, false);
@@ -809,29 +1059,45 @@ function renderCalendar() {
                 if (historyFilter === "all" || responsible === historyFilter) {
                     if (responsible) {
                         totalForFilter++;
-                        if (window.isCompleted(taskId, date, responsible)) completedForFilter++;
+                        if (isCompleted(taskId, date, responsible)) completedForFilter++;
                     }
                 }
             });
 
-            summary = `I: ${igor} | W: ${wagner}`;
+            summary = `I:${igor} W:${wagner}`;
 
-            if (normDate > today) statusClass = "status-future";
-            else if (totalForFilter === 0) statusClass = "status-empty";
-            else if (completedForFilter === totalForFilter) statusClass = "status-done";
-            else statusClass = normDate < today ? "status-overdue" : "status-partial";
+            // Cores Pastel do Calendário
+            if (normDate > today) {
+                statusClass = "status-future"; // Azul Pastel
+            } else if (totalForFilter === 0) {
+                statusClass = "status-empty";
+            } else if (completedForFilter === totalForFilter) {
+                statusClass = "status-done"; // Verde Pastel
+            } else if (completedForFilter > 0) {
+                statusClass = "status-partial"; // Amarelo Pastel
+            } else {
+                statusClass = normDate < today ? "status-overdue" : "status-partial"; // Vermelho ou Amarelo
+            }
         }
 
-        day.classList.add(statusClass);
-        day.innerHTML = `<strong>${dayNum}</strong><small>${summary}</small>`;
-        day.onclick = function() {
+        dayCell.classList.add(statusClass);
+        dayCell.innerHTML = `
+            <strong>${dayNum}</strong>
+            <small>${summary}</small>
+        `;
+
+        dayCell.onclick = function() {
             selectedHistoryDate = date;
             renderHistoryDetails();
         };
-        grid.appendChild(day);
+
+        calendar.appendChild(dayCell);
     }
 }
 
+/* =========================================
+   DETALHES DO HISTÓRICO
+========================================= */
 function setHistoryFilter(user) {
     historyFilter = user;
     renderCalendar();
@@ -840,6 +1106,7 @@ function setHistoryFilter(user) {
 
 function renderHistoryDetails() {
     const container = document.getElementById("historyDetails");
+
     if (!selectedHistoryDate) {
         container.innerHTML = "Clique em um dia do calendário.";
         return;
@@ -853,42 +1120,66 @@ function renderHistoryDetails() {
         return;
     }
 
-    let html = `<h3>Data: ${date.toLocaleDateString("pt-BR")}</h3>`;
+    let html = "";
     tasks.forEach(taskId => {
         const responsible = getResponsible(taskId, date, false);
         const task = chores[taskId];
+
         if (historyFilter !== "all" && responsible !== historyFilter) return;
 
         if (!responsible) {
-            html += `<div class="task"><span>${task.icon} ${task.name}</span><span>🎲 A definir</span></div>`;
+            html += `
+                <div class="task">
+                    <span>${task.icon} ${task.name}</span>
+                    <span>🎲 A definir</span>
+                </div>
+            `;
             return;
         }
 
-        const completed = window.isCompleted(taskId, date, responsible);
-        const time = window.getCompletionTime(taskId, date, responsible);
+        const completed = isCompleted(taskId, date, responsible);
+        const time = localStorage.getItem(completionKey(taskId, date, responsible) + "_time");
 
         html += `
             <div class="task ${completed ? "done" : ""}">
                 <span>${task.icon} ${task.name}</span>
                 <span>👤 ${responsible}</span>
-                <span>${completed ? "✅ Concluída" : (normalizeDate(date) < normalizeDate(new Date()) ? "⏰ Atrasada" : "⬜ Pendente")}</span>
+                <span>
+                    ${completed ? "✅ Concluída" : (normalizeDate(date) < normalizeDate(new Date()) ? "⏰ Atrasada" : "⬜ Pendente")}
+                </span>
                 ${time ? `<small>${time}</small>` : ""}
             </div>
         `;
     });
 
-    container.innerHTML = html || "<p>Nenhuma atividade para este filtro.</p>";
+    if (html === "") {
+        html = "<p>Nenhuma atividade para este filtro.</p>";
+    }
+
+    container.innerHTML = html;
+}
+
+/* =========================================
+   RESUMO DA SEMANA
+========================================= */
+function getMonday(date) {
+    const d = normalizeDate(date);
+    const day = d.getDay();
+    const difference = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + difference);
+    return d;
 }
 
 function renderWeek() {
     const container = document.getElementById("weekSummary");
     const today = normalizeDate(new Date());
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+    const monday = getMonday(today);
 
     let html = "";
+
     USERS.forEach(user => {
-        let total = 0, completed = 0, points = 0, details = "";
+        let total = 0, completed = 0, points = 0;
+        let details = "";
 
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday.getTime() + i * DAY_MS);
@@ -900,13 +1191,19 @@ function renderWeek() {
 
                 total++;
                 const task = chores[taskId];
-                const done = window.isCompleted(taskId, date, user);
+                const done = isCompleted(taskId, date, user);
 
-                if (done) { completed++; points += task.points; }
+                if (done) {
+                    completed++;
+                    points += task.points;
+                }
+
+                const dayName = date.toLocaleDateString("pt-BR", { weekday: "short" });
+
                 details += `
                     <div class="task">
                         <span>${task.icon} ${task.name}</span>
-                        <span>${date.toLocaleDateString("pt-BR", { weekday: "short" })}</span>
+                        <span>${dayName}</span>
                         <span>${done ? "✅" : (date < today ? "⏰" : "⬜")}</span>
                     </div>
                 `;
@@ -914,12 +1211,17 @@ function renderWeek() {
         }
 
         const progress = total === 0 ? 0 : (completed / total) * 100;
+
         html += `
-            <div class="card">
+            <div class="summary-user card">
                 <h2>👤 ${user}</h2>
-                <p><strong>${completed}</strong> de <strong>${total}</strong> concluídas (${points} pts)</p>
-                <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
-                <br>${details}
+                <p><strong>${completed}</strong> de <strong>${total}</strong> atividades concluídas</p>
+                <p>⭐ Pontos: <strong>${points}</strong></p>
+                <div class="progress">
+                    <div class="progress-bar" style="width:${progress}%"></div>
+                </div>
+                <br>
+                ${details}
             </div>
         `;
     });
@@ -927,6 +1229,9 @@ function renderWeek() {
     container.innerHTML = html;
 }
 
+/* =========================================
+   TROCAR USUÁRIO E TELA
+========================================= */
 function selectUser(user) {
     currentUser = user;
     document.getElementById("btnIgor").classList.toggle("active", user === "Igor");
@@ -939,20 +1244,42 @@ function showScreen(screen) {
     document.getElementById("historyScreen").classList.add("hidden");
     document.getElementById("weekScreen").classList.add("hidden");
 
-    if (screen === "today") document.getElementById("todayScreen").classList.remove("hidden");
-    if (screen === "history") { document.getElementById("historyScreen").classList.remove("hidden"); renderCalendar(); }
-    if (screen === "week") { document.getElementById("weekScreen").classList.remove("hidden"); renderWeek(); }
+    if (screen === "today") {
+        document.getElementById("todayScreen").classList.remove("hidden");
+    }
+    if (screen === "history") {
+        document.getElementById("historyScreen").classList.remove("hidden");
+        renderCalendar();
+        renderHistoryDetails();
+    }
+    if (screen === "week") {
+        document.getElementById("weekScreen").classList.remove("hidden");
+        renderWeek();
+    }
+}
+
+/* =========================================
+   INICIALIZAÇÃO DA APLICAÇÃO
+========================================= */
+function renderDate() {
+    const today = new Date();
+    document.getElementById("currentDate").textContent =
+        today.toLocaleDateString("pt-BR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
 }
 
 function renderAll() {
-    document.getElementById("currentDate").textContent =
-        new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    renderDate();
     renderToday();
-    updateNotifBtn();
 }
 
 initTheme();
 renderAll();
+
 </script>
 </body>
 </html>
